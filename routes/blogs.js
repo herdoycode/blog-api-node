@@ -13,12 +13,12 @@ router.get("/", async (req, res) => {
 
 // Creating a post
 router.post("/", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
   const category = await Category.findById(req.body.categoryId);
   if (!category) return res.status(404).send("Category not Found");
   const author = await User.findById(req.body.authorId);
   if (!author) return res.status(404).send("Author not Found");
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
   const post = new Blog({
     title: req.body.title,
     thumbnail: req.body.thumbnail,

@@ -1,13 +1,12 @@
 import express from "express";
 import { Comment } from "../models/comment.js";
-import { Blog } from "../models/blog.js";
 
 const router = express.Router();
 
 router.get("/:postId", async (req, res) => {
   const comments = await Comment.find({
     postId: req.params.postId,
-  }).populate({ path: "user", select: "name avatar" });
+  }).populate("user");
   res.send(comments);
 });
 
@@ -18,9 +17,7 @@ router.post("/", async (req, res) => {
     text: req.body.text,
   });
   await comment.save();
-  const post = await Blog.findById(req.body.postId);
-  post.comment.push(comment);
-  await post.save();
+
   res.send(comment);
 });
 
