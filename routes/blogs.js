@@ -1,4 +1,6 @@
 import express from "express";
+import { admin } from "../middlewares/admin.js";
+import { auth } from "../middlewares/auth.js";
 import { Blog, validate } from "../models/blog.js";
 import { Category } from "../models/category.js";
 import { User } from "../models/user.js";
@@ -12,7 +14,7 @@ router.get("/", async (req, res) => {
 });
 
 // Creating a post
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   const category = await Category.findById(req.body.categoryId);
@@ -46,7 +48,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Get specific post by id and update
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   const category = await Category.findById(req.body.categoryId);
   if (!category) return res.status(404).send("Category not Found");
   const post = await Blog.findByIdAndUpdate(
@@ -71,7 +73,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Get specific post by id and delete
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", [auth, admin], async (req, res) => {
   const posts = await Blog.findByIdAndRemove(req.params.id);
   res.send(posts);
 });

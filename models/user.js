@@ -25,7 +25,7 @@ export const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
     },
-    idAdmin: {
+    isAdmin: {
       type: Boolean,
       default: false,
     },
