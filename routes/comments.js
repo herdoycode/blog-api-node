@@ -3,6 +3,11 @@ import { Comment } from "../models/comment.js";
 
 const router = express.Router();
 
+router.get('/', async(req, res)=>{
+  const comments = await Comment.find().populate('user');
+  res.send(comments)
+})
+
 router.get("/:postId", async (req, res) => {
   const comments = await Comment.find({
     postId: req.params.postId,
