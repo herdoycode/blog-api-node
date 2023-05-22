@@ -1,12 +1,14 @@
 import express from "express";
 import { Comment } from "../models/comment.js";
+import { auth } from "../middlewares/auth.js";
+import { admin } from "../middlewares/admin.js";
 
 const router = express.Router();
 
-router.get('/', async(req, res)=>{
-  const comments = await Comment.find().populate('user');
-  res.send(comments)
-})
+router.get("/", async (req, res) => {
+  const comments = await Comment.find().populate("user");
+  res.send(comments);
+});
 
 router.get("/:postId", async (req, res) => {
   const comments = await Comment.find({
@@ -15,7 +17,7 @@ router.get("/:postId", async (req, res) => {
   res.send(comments);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const comment = new Comment({
     postId: req.body.postId,
     user: req.body.userId,
@@ -26,7 +28,7 @@ router.post("/", async (req, res) => {
   res.send(comment);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", [auth, admin], async (req, res) => {
   const comment = await Comment.findByIdAndRemove(req.params.id);
   if (!comment) return res.status(404).send("Category not found");
   res.send(comment);

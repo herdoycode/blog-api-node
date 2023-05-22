@@ -1,5 +1,7 @@
 import express from "express";
 import { Message, validate } from "../models/message.js";
+import { auth } from "../middlewares/auth.js";
+import { admin } from "../middlewares/admin.js";
 
 const router = express.Router();
 
@@ -21,7 +23,7 @@ router.post("/", async (req, res) => {
   res.send(message);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", [auth, admin], async (req, res) => {
   const message = await Message.findByIdAndRemove(req.params.id);
   if (!message) return res.status(404).send("Category not found");
   res.send(message);

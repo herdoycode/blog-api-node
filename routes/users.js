@@ -3,6 +3,8 @@ import _ from "lodash";
 import bcrypt from "bcrypt";
 import { User, validate } from "../models/user.js";
 import dotenv from "dotenv";
+import { auth } from "../middlewares/auth.js";
+import { admin } from "../middlewares/admin.js";
 dotenv.config();
 
 const router = express.Router();
@@ -34,7 +36,7 @@ router.get("/:id", async (req, res) => {
   res.send(user);
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   const user = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
@@ -42,7 +44,7 @@ router.put("/:id", async (req, res) => {
   res.send(user);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", [auth, admin], async (req, res) => {
   const user = await User.findByIdAndRemove(req.params.id);
   if (!user) return res.status(404).send("User not Found.");
   res.send(user);
