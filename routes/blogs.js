@@ -3,14 +3,35 @@ import { admin } from "../middlewares/admin.js";
 import { auth } from "../middlewares/auth.js";
 import { Blog, validate } from "../models/blog.js";
 import { Category } from "../models/category.js";
-import { User } from "../models/user.js";
 
 const router = express.Router();
 
 // Get all post
 router.get("/", async (req, res) => {
-  const posts = await Blog.find();
-  res.send(posts);
+  const categoryId = req.query.categoryId;
+  const searchText = req.query.searchText;
+  if (categoryId && searchText) {
+    const posts = await Blog.find({
+      title: { $regex: searchText, $options: "i" },
+      "category._id": categoryId,
+    }).populate("author", "name avatar -_id");
+    res.send(posts);
+  }
+  if (searchText && !categoryId) {
+    const posts = await Blog.find({
+      title: { $regex: searchText, $options: "i" },
+    }).populate("author", "name avatar -_id");
+    res.send(posts);
+  }
+  if (!searchText && categoryId) {
+    const posts = await Blog.find({
+      "category._id": categoryId,
+    }).populate("author", "name avatar -_id");
+    res.send(posts);
+  } else {
+    const allPosts = await Blog.find().populate("author", "name avatar -_id");
+    res.send(allPosts);
+  }
 });
 
 // Creating a post
@@ -19,9 +40,7 @@ router.post("/", auth, async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
   const category = await Category.findById(req.body.categoryId);
   if (!category) return res.status(404).send("Category not Found");
-  const author = await User.findById(req.body.authorId);
-  if (!author) return res.status(404).send("Author not Found");
-  const post = new Blog({
+  const post = await new Blog({
     title: req.body.title,
     thumbnail: req.body.thumbnail,
     category: {
@@ -29,20 +48,22 @@ router.post("/", auth, async (req, res) => {
       name: category.name,
     },
     author: {
-      name: author.name,
-      avatar: author.avatar,
+      _id: req.user._id,
     },
     content: req.body.content,
     like: req.body.like,
     comment: req.body.comment,
-  });
+  }).populate("author", "name avatar -_id");
   await post.save();
   res.send(post);
 });
 
 // Get specific post by id
 router.get("/:id", async (req, res) => {
-  const post = await Blog.findById(req.params.id);
+  const post = await Blog.findById(req.params.id).populate(
+    "author",
+    "name avatar -_id"
+  );
   if (!post) return res.status(404).send("Post not found.");
   res.send(post);
 });
@@ -62,7 +83,6 @@ router.put("/:id", auth, async (req, res) => {
       },
       content: req.body.content,
       like: req.body.like,
-      comment: req.body.comment,
     },
     {
       new: true,
@@ -74,8 +94,8 @@ router.put("/:id", auth, async (req, res) => {
 
 // Get specific post by id and delete
 router.delete("/:id", [auth, admin], async (req, res) => {
-  const posts = await Blog.findByIdAndRemove(req.params.id);
-  res.send(posts);
+  const post = await Blog.findByIdAndRemove(req.params.id);
+  res.send(post);
 });
 
 export default router;

@@ -20,16 +20,8 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     author: {
-      type: new mongoose.Schema({
-        name: {
-          type: String,
-          maxLength: 200,
-          required: true,
-        },
-        avatar: {
-          type: String,
-        },
-      }),
+      type: mongoose.Types.ObjectId,
+      ref: "User",
     },
     like: {
       type: Number,
@@ -49,7 +41,6 @@ export const validate = (post) => {
     thumbnail: Joi.string().required(),
     categoryId: Joi.string().required(),
     content: Joi.string().required(),
-    authorId: Joi.string().required(),
     like: Joi.number(),
     comment: Joi.array(),
   });
